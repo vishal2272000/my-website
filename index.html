@@ -2,116 +2,128 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>My IVR Services</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background: #f4f4f4;
-    }
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login Example</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://prod15-live-chat.sprinklr.com/livechat.js"></script>
 
-    header {
-      background-color: #0d47a1;
-      color: white;
-      padding: 20px;
-      text-align: center;
-    }
-
-    nav {
-      background-color: #1976d2;
-      padding: 10px;
-      text-align: center;
-    }
-
-    nav a {
-      color: white;
-      margin: 0 15px;
-      text-decoration: none;
-      font-weight: bold;
-    }
-
-    section {
-      padding: 30px;
-      background: white;
-      max-width: 800px;
-      margin: 30px auto;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-
-    footer {
-      text-align: center;
-      background-color: #0d47a1;
-      color: white;
-      padding: 15px;
-      position: fixed;
-      bottom: 0;
-      width: 100%;
-    }
-
-    .button {
-      display: inline-block;
-      background-color: #1976d2;
-      color: white;
-      padding: 10px 20px;
-      text-decoration: none;
-      border-radius: 5px;
-      margin-top: 20px;
-    }
-
-    .button:hover {
-      background-color: #0d47a1;
-    }
-  </style>
 </head>
-<body>
+<body class="bg-gray-100">
 
-  <header>
-    <h1>Welcome to My IVR Services</h1>
-    <p>Smart voice automation for your business</p>
-  </header>
+  <!-- Login Page -->
+  <div id="loginPage" class="flex items-center justify-center h-screen">
+    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+      <h2 class="text-2xl font-bold mb-6 text-center">Login</h2>
+      <input id="email" type="email" placeholder="Email" class="w-full p-3 mb-4 border rounded">
+      <input id="password" type="password" placeholder="Password" class="w-full p-3 mb-4 border rounded">
+      <button id="loginBtn" class="w-full bg-blue-500 text-white py-3 rounded hover:bg-blue-600">Login</button>
+      <p id="errorMsg" class="text-red-500 mt-4 text-center hidden">Invalid email or password</p>
+    </div>
+  </div>
 
-  <nav>
-    <a href="#services">Services</a>
-    <a href="#contact">Contact</a>
-  </nav>
+  <!-- Home Page -->
+  <div id="homePage" class="hidden p-8">
+    <h1 class="text-3xl font-bold mb-6">Welcome, <span id="userName"></span>!</h1>
 
-  <section id="services">
-    <h2>Our Services</h2>
-    <ul>
-      <li>Custom IVR Flow Design</li>
-      <li>Voice Menu Configuration</li>
-      <li>Integration with WhatsApp & Email</li>
-      <li>Call Routing and Recording</li>
-    </ul>
+    <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
+      <h2 class="text-xl font-semibold mb-4">Your Info</h2>
+      <p><strong>First Name:</strong> <span id="firstName"></span></p>
+      <p><strong>Last Name:</strong> <span id="lastName"></span></p>
+      <p><strong>Email:</strong> <span id="userEmail"></span></p>
+      <p><strong>Phone:</strong> <span id="phoneNumber"></span></p>
+      <p class="mt-4"><strong>User Hash:</strong> <span id="userHash" class="break-all"></span></p>
+    </div>
+  </div>
 
-    <a class="button" href="#contact">Get Started</a>
-  </section>
+  <script>
+    // SHA-256 HMAC hash function
+    async function createSha256Signature(key, data) {
+      const enc = new TextEncoder();
 
-  <section id="contact">
-    <h2>Contact Us</h2>
-    <p>Email: support@myivrservices.com</p>
-    <p>WhatsApp: +000000</p>
-  </section>
+      const cryptoKey = await crypto.subtle.importKey(
+        "raw",
+        enc.encode(key),
+        { name: "HMAC", hash: "SHA-256" },
+        false,
+        ["sign"]
+      );
 
-  <footer>
-    &copy; 2025 My IVR Services. All rights reserved.
-  </footer>
+      const signature = await crypto.subtle.sign(
+        "HMAC",
+        cryptoKey,
+        enc.encode(data)
+      );
+
+      // convert ArrayBuffer to hex
+      return Array.from(new Uint8Array(signature))
+        .map(b => b.toString(16).padStart(2, "0"))
+        .join("");
+    }
+
+    const loginBtn = document.getElementById('loginBtn');
+    const errorMsg = document.getElementById('errorMsg');
+    const loginPage = document.getElementById('loginPage');
+    const homePage = document.getElementById('homePage');
+    let myJsonVar = {}
+
+    loginBtn.addEventListener('click', async () => {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      // Replace this URL with your MockAPI endpoint
+      const apiUrl = `https://692039b031e684d7bfcc290a.mockapi.io/users?email=${email}&password=${password}`;
+
+      try {
+        const res = await fetch(apiUrl);
+        const data = await res.json();
+
+        if (data.length > 0) {
+          const user = data[0];
+
+          // Hide login, show home
+          loginPage.classList.add('hidden');
+          homePage.classList.remove('hidden');
+        
+          // Fill user info
+          document.getElementById('userName').textContent = user.firstName;
+          document.getElementById('firstName').textContent = user.firstName;
+          document.getElementById('lastName').textContent = user.lastName;
+          document.getElementById('userEmail').textContent = user.email;
+          document.getElementById('phoneNumber').textContent = user.phoneNumber;
+
+          // Create user hash
+          const userDetails = `${user.id}_${user.firstName}_${user.lastName}_${user.phoneNumber}_${user.email}`;
+
+          const hash = await createSha256Signature("6f383a7e-8be8-4003-ad23-f728b3fa6d16", userDetails);
+          document.getElementById('userHash').textContent = hash;
+          let myJson = data[0]
+          myJson.hash = hash
+          myJsonVar = myJson
+          
+          console.log("My User ", JSON.stringify(myJsonVar))
+
+        } else {
+          errorMsg.classList.remove('hidden');
+        }
+      } catch (err) {
+        console.error('Error:', err);
+        errorMsg.textContent = 'Something went wrong. Try again.';
+        errorMsg.classList.remove('hidden');
+      }
+    });
+
+    
+
+    window.sprChatSettings = {"appId":"68f60263035bad6628c6775c_app_1111007405","skin":"MODERN"};
+    !function(){var a,r,n,o,i,s=window,e=s.sprChat;e&&e.loaded||(a=document,(r=function(){r.q.push(arguments)}).q=[],
+    s.sprChat=r,s.sprChat.loaded=!0,n=0,o="spr-live-chat-widget",i=function(){var e=a.getElementById(o),e=(e&&e.parentNode.removeChild(e),a.createElement("script")),
+    t=(e.type="text/javascript",e.async=!0,e.src="https://prod15-live-chat.sprinklr.com/api/livechat/handshake/widget/"+s.sprChatSettings.appId,e.id=o,
+    e.onerror=function(e){var t,a;++n<=3?setTimeout(i,250):(s.sprChat.loaded=!1,t="WIDGET_LOAD_FAILED",a=e,
+    r.q.map(function(e){if("subscribeToUpdate"===e[0]&&e[1]&&"loadCompleted"===e[1].topic)return e[1].subscriber}).map(function(e){e&&e({response:{error:!0,errorPayload:{type:t,message:a}}})}))},
+    a.getElementsByTagName("script")[0]);t.parentNode.insertBefore(e,t)},"loading"!==a.readyState?i():a.addEventListener("DOMContentLoaded",i))}();
+
+    window.sprChat('updateUserSettings',{"user": JSON.stringify(myJsonVar)})
+  </script>
 
 </body>
-  
-
-
-
-
-<script>
-window.sprChatSettings = {"appId":"68ecec84e033a6645ccaecc2_app_600046708","skin":"MODERN"};
-!function(){var a,r,n,o,i,s=window,e=s.sprChat;e&&e.loaded||(a=document,(r=function(){r.q.push(arguments)}).q=[],
-s.sprChat=r,s.sprChat.loaded=!0,n=0,o="spr-live-chat-widget",i=function(){var e=a.getElementById(o),e=(e&&e.parentNode.removeChild(e),a.createElement("script")),
-t=(e.type="text/javascript",e.async=!0,e.src="https://prod4-live-chat.sprinklr.com/api/livechat/handshake/widget/"+s.sprChatSettings.appId,e.id=o,
-e.onerror=function(e){var t,a;++n<=3?setTimeout(i,250):(s.sprChat.loaded=!1,t="WIDGET_LOAD_FAILED",a=e,
-r.q.map(function(e){if("subscribeToUpdate"===e[0]&&e[1]&&"loadCompleted"===e[1].topic)return e[1].subscriber}).map(function(e){e&&e({response:{error:!0,errorPayload:{type:t,message:a}}})}))},
-a.getElementsByTagName("script")[0]);t.parentNode.insertBefore(e,t)},"loading"!==a.readyState?i():a.addEventListener("DOMContentLoaded",i))}();
-</script>
 </html>
-
