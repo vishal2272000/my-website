@@ -44,7 +44,8 @@
                 "x-chat-referer": "https://vishal2272000.github.io/my-website/"
             }
         })
-        console.log("response handshake: ", response);
+        const data = await response.json()
+        console.log("response handshake: ", data);
     })();
     // SHA-256 HMAC hash function
     async function createSha256Signature(key, data) {
