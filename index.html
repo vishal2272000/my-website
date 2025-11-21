@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login Example</title>
   <script src="https://cdn.tailwindcss.com"></script>
- <script src="https://prod15-live-chat.sprinklr.com/livechat.js" async></script>
+  
 
 </head>
 <body class="bg-gray-100">
@@ -36,6 +36,16 @@
   </div>
 
   <script>
+    (async function() {
+        const response = await fetch("https://prod15-live-chat.sprinklr.com/api/livechat/v1/handshake/application/68f60263035bad6628c6775c_app_1111007405", {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                "x-chat-referer": "https://vishal2272000.github.io/my-website/"
+            }
+        })
+        console.log("response handshake: ", response);
+    })();
     // SHA-256 HMAC hash function
     async function createSha256Signature(key, data) {
       const enc = new TextEncoder();
@@ -123,7 +133,8 @@
     a.getElementsByTagName("script")[0]);t.parentNode.insertBefore(e,t)},"loading"!==a.readyState?i():a.addEventListener("DOMContentLoaded",i))}();
 
     window.sprChat('updateUserSettings',{"user": JSON.stringify(myJsonVar)})
+    
   </script>
-
+    <script src="https://prod15-live-chat.sprinklr.com/livechat.js" async></script>
 </body>
 </html>
